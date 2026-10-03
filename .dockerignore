@@ -1,0 +1,8 @@
+.git
+.github
+docs
+test
+dist
+node_modules
+*.tar
+*.tar.gz

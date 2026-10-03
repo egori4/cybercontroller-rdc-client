@@ -1,0 +1,16 @@
+{
+  "name": "rdc-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Hardened Remote Desktop Commander client with a generic MCP Streamable HTTP CLI",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

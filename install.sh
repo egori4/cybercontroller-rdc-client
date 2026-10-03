@@ -124,6 +124,11 @@ docker create \
   "${ca_env_args[@]}" \
   "$IMAGE" >/dev/null
 
+memory_swap=$(docker inspect "$CONTAINER_NAME" --format '{{.HostConfig.MemorySwap}}')
+if [[ "$memory_swap" == "-1" ]]; then
+  echo "WARNING: this Docker host does not enforce the requested swap limit; the 512 MiB RAM limit is still configured." >&2
+fi
+
 echo "Created hardened container: $CONTAINER_NAME"
 echo "RDC device name: $RDC_DEVICE_NAME"
 echo "MCP endpoint: $MCP_URL"

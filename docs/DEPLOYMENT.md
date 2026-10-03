@@ -80,6 +80,10 @@ no published ports
 normal bridge networking
 ```
 
+## Host resource-limit note
+
+Some older kernels/Docker hosts do not support memory+swap accounting. Docker may then accept the container while reporting `MemorySwap=-1`; the hard RAM limit remains configured, but an additional swap limit is not enforceable on that host. The installer detects and warns about this condition.
+
 ## Lifecycle
 
 Running container:

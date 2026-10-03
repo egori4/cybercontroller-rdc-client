@@ -35,6 +35,10 @@ Configuration:
 - `MCP_BEARER_TOKEN` - optional environment fallback
 - `MCP_CA_CERT_FILE` - optional CA certificate path
 
+## Intentional feature reduction
+
+Desktop Commander preemptively downloads Chrome for its PDF writer. This image deliberately disables that PDF/Chrome path so the client does not download a browser at runtime. PDF generation is out of scope for this MCP client.
+
 ## Container boundary
 
 The recommended deployment runs:

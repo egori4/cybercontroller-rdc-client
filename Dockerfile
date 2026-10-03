@@ -15,6 +15,13 @@ RUN apt-get update \
  && npm cache clean --force \
  && rm -rf /var/lib/apt/lists/*
 
+# Desktop Commander 0.2.52 preemptively downloads Chrome for its PDF writer.
+# This hardened client intentionally does not provide PDF-generation capability.
+# A harmless placeholder satisfies its "system Chrome exists" startup check and
+# prevents a large runtime browser download into ephemeral storage.
+RUN printf '%s\n' '#!/bin/sh' 'echo "Chromium is intentionally disabled in rdc-client" >&2' 'exit 126' > /usr/bin/chromium \
+ && chmod 0755 /usr/bin/chromium
+
 WORKDIR /opt/rdc-client
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force

@@ -82,6 +82,13 @@ if [[ -n "${MCP_CA_SOURCE:-}" ]]; then
     -c 'cat > /secrets/ca.crt; chown 10001:10001 /secrets/ca.crt; chmod 0444 /secrets/ca.crt'
 fi
 
+ca_env_args=()
+if docker run --rm \
+  --mount "type=volume,src=$SECRETS_VOLUME,dst=/secrets,readonly" \
+  --entrypoint sh "$IMAGE" -c 'test -s /secrets/ca.crt' >/dev/null 2>&1; then
+  ca_env_args+=(--env NODE_EXTRA_CA_CERTS=/run/rdc-client/ca.crt)
+fi
+
 if docker container inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
   if [[ -t 0 ]]; then
     read -r -p "Container $CONTAINER_NAME exists. Recreate it? [y/N]: " answer
@@ -114,6 +121,7 @@ docker create \
   --mount "type=volume,src=$STATE_VOLUME,dst=/home/rdc/.desktop-commander-device" \
   --mount "type=volume,src=$SECRETS_VOLUME,dst=/run/rdc-client,readonly" \
   --env "MCP_URL=$MCP_URL" \
+  "${ca_env_args[@]}" \
   "$IMAGE" >/dev/null
 
 echo "Created hardened container: $CONTAINER_NAME"

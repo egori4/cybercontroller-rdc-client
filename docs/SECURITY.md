@@ -51,6 +51,10 @@ For private/self-signed lab PKI, mount only the CA/server certificate needed for
 
 Do not disable TLS verification in the standard deployment.
 
+## Runtime browser downloads
+
+Desktop Commander currently prefetches Chrome for PDF generation. The image provides a nonfunctional Chromium placeholder so that startup does not download a browser into runtime storage. PDF generation is intentionally unsupported.
+
 ## Residual risk
 
 The container uses normal Docker bridge networking. It is not an outbound network sandbox.

@@ -21,7 +21,7 @@ MCP server
 For CyberController, the MCP server may be:
 
 ```text
-egori4/cybercontroller-evidence-service
+egori4/cybercontroller-mcp
 ```
 
 but RDC Client does not contain CyberController log mappings or host mounts.
@@ -56,7 +56,7 @@ Example:
 ```text
 MCP URL: https://10.10.20.15:8443/mcp
 Token:   <secret>
-CA:      cc-evidence-ca.crt
+CA:      cybercontroller-mcp-ca.crt
 ```
 
 Never provide the MCP server TLS private key to the RDC client.
@@ -97,7 +97,7 @@ If a private/self-signed CA file is required, enter its local path when prompted
 ```bash
 RDC_DEVICE_NAME=customer-a-cc01 \
 MCP_URL=https://10.10.20.15:8443/mcp \
-MCP_CA_SOURCE=/secure/path/cc-evidence-ca.crt \
+MCP_CA_SOURCE=/secure/path/cybercontroller-mcp-ca.crt \
 START_NOW=n \
 ./install.sh
 ```
@@ -177,7 +177,7 @@ docker exec rdc-client mcpctl health
 docker exec rdc-client mcpctl tools
 ```
 
-For a CyberController Evidence MCP:
+For a CyberController MCP:
 
 ```bash
 docker exec rdc-client mcpctl call get_catalog
@@ -254,7 +254,7 @@ docker restart rdc-client
 docker exec rdc-client mcpctl health
 ```
 
-For CyberController Evidence MCP 0.2.0, one bearer token is shared by all clients of that Evidence server. Server-side rotation therefore affects RDC, n8n, and any other consumer using that same server.
+For CyberController MCP 0.2.0, one bearer token is shared by all clients of that CyberController MCP server. Server-side rotation therefore affects RDC, n8n, and any other consumer using that same server.
 
 ## 12. Replace the CA certificate
 

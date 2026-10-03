@@ -2,7 +2,7 @@
 
 A hardened Remote Desktop Commander container with a small generic MCP Streamable HTTP client.
 
-The project is intentionally **client-only**. It does not read CyberController logs, mount host filesystems, or implement product-specific evidence logic. Those responsibilities belong to the MCP server it connects to.
+RDC Client is an **optional bridge/consumer**, not an MCP server and not the only way to access one. An MCP server may instead be used directly by n8n, another MCP client, another agent platform, or custom automation.
 
 ## Architecture
 
@@ -15,9 +15,23 @@ Desktop Commander Remote
    v
 RDC Client container
    |
-   | mcpctl (MCP Streamable HTTP)
+   | mcpctl / MCP Streamable HTTP
    v
 Remote MCP server
+```
+
+The project is intentionally client-only. It does not mount the MCP server host filesystem or implement the server's domain-specific evidence/business logic.
+
+## Install
+
+For first-time deployment and lifecycle operations:
+
+**[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
+
+Default Docker image:
+
+```text
+egori4/rdc-client:0.1.0
 ```
 
 ## Included commands
@@ -31,17 +45,13 @@ mcpctl call <tool-name> '{"argument":"value"}'
 Configuration:
 
 - `MCP_URL` - MCP Streamable HTTP endpoint
-- `MCP_BEARER_TOKEN_FILE` - recommended bearer token file
+- `MCP_BEARER_TOKEN_FILE` - recommended bearer-token file
 - `MCP_BEARER_TOKEN` - optional environment fallback
 - `MCP_CA_CERT_FILE` - optional CA certificate path
 
-## Intentional feature reduction
-
-Desktop Commander preemptively downloads Chrome for its PDF writer. This image deliberately disables that PDF/Chrome path so the client does not download a browser at runtime. PDF generation is out of scope for this MCP client.
-
 ## Container boundary
 
-The recommended deployment runs:
+Recommended deployment:
 
 - non-root UID/GID 10001
 - read-only root filesystem
@@ -55,18 +65,9 @@ The recommended deployment runs:
 - persistent Desktop Commander device state only
 - read-only MCP secret/CA volume
 
-See `docs/SECURITY.md` and `docs/DEPLOYMENT.md`.
+## Intentional feature reduction
 
-## Build
-
-Build on a workstation or CI runner, not on the target server:
-
-```bash
-npm test
-docker build --pull --no-cache -t rdc-client:0.1.0 .
-```
-
-Desktop Commander is resolved from `@wonderwhy-er/desktop-commander@latest` at image build time unless `DESKTOP_COMMANDER_VERSION` is explicitly supplied.
+Desktop Commander currently preemptively checks for Chrome for PDF generation. This image deliberately disables that PDF/Chrome path so the client does not download a browser at runtime. PDF generation is out of scope.
 
 ## Public-repo rule
 
@@ -74,6 +75,5 @@ Never commit:
 
 - bearer tokens
 - private keys
-- customer certificates containing private keys
-- environment-specific credentials
+- environment/customer credentials
 - Remote Desktop Commander device state

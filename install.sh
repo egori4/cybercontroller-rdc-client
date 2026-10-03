@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE="${RDC_CLIENT_IMAGE:-rdc-client:0.1.0}"
+IMAGE="${RDC_CLIENT_IMAGE:-egori4/rdc-client:0.1.0}"
 CONTAINER_NAME="${CONTAINER_NAME:-rdc-client}"
 STATE_VOLUME="${STATE_VOLUME:-rdc-client-state}"
 SECRETS_VOLUME="${SECRETS_VOLUME:-rdc-client-secrets}"
 RDC_DEVICE_NAME="${RDC_DEVICE_NAME:-}"
 MCP_URL="${MCP_URL:-}"
+MCP_CA_SOURCE="${MCP_CA_SOURCE:-}"
 START_NOW="${START_NOW:-}"
 
 die() {
@@ -33,6 +34,10 @@ if [[ -z "$MCP_URL" ]]; then
 fi
 
 [[ "$MCP_URL" =~ ^https?:// ]] || die "MCP_URL must begin with http:// or https://"
+
+if [[ -z "$MCP_CA_SOURCE" && -t 0 ]]; then
+  read -r -p "CA certificate path (leave blank if normal public PKI): " MCP_CA_SOURCE
+fi
 
 if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
   echo "Image $IMAGE is not local; pulling..."
@@ -74,7 +79,7 @@ fi
 
 [[ "$token_present" -eq 1 ]] || die "no bearer token is available; set MCP_BEARER_TOKEN or pre-populate $SECRETS_VOLUME"
 
-if [[ -n "${MCP_CA_SOURCE:-}" ]]; then
+if [[ -n "$MCP_CA_SOURCE" ]]; then
   [[ -f "$MCP_CA_SOURCE" ]] || die "MCP_CA_SOURCE does not exist: $MCP_CA_SOURCE"
   cat "$MCP_CA_SOURCE" | docker run --rm -i --user 0:0 \
     --mount "type=volume,src=$SECRETS_VOLUME,dst=/secrets" \

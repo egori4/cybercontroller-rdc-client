@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE="${RDC_CLIENT_IMAGE:-egori4/rdc-client:0.1.0}"
+IMAGE="${RDC_CLIENT_IMAGE:-egori4/cybercontroller-rdc-client:0.2.0}"
 CONTAINER_NAME="${CONTAINER_NAME:-rdc-client}"
 STATE_VOLUME="${STATE_VOLUME:-rdc-client-state}"
 SECRETS_VOLUME="${SECRETS_VOLUME:-rdc-client-secrets}"

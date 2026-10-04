@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Shell syntax
+        run: |
+          find . -path './node_modules' -prune -o -name '*.sh' -print0 | xargs -0 -r -n1 bash -n
+      - name: Unit tests
+        run: |
+          docker build -t restricted-rdc:ci .
+          docker run --rm --network none --entrypoint node \
+            --mount "type=bind,src=$GITHUB_WORKSPACE/test,dst=/opt/rdc-client/test,readonly" \
+            restricted-rdc:ci --test /opt/rdc-client/test/config.test.mjs
+      - name: Verify installed restricted boundary without pairing
+        env:
+          RDC_CLIENT_IMAGE: restricted-rdc:ci
+          RDC_DEVICE_NAME: ci-restricted-client
+          MCP_URL: https://127.0.0.1:8443/mcp
+          MCP_BEARER_TOKEN: ci-only-dummy-not-a-credential
+          START_NOW: n
+        run: |
+          ./install.sh
+          ./scripts/verify-container.sh rdc-client

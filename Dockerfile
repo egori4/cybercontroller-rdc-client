@@ -1,6 +1,6 @@
 FROM node:22.23.3-bookworm-slim
 
-ARG DESKTOP_COMMANDER_VERSION=latest
+ARG DESKTOP_COMMANDER_VERSION=0.2.52
 
 ENV NODE_ENV=production \
     HOME=/home/rdc \
@@ -40,3 +40,11 @@ WORKDIR /home/rdc
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["desktop-commander", "remote"]
+
+ARG VERSION=0.2.0
+ARG VCS_REF=unknown
+LABEL org.opencontainers.image.version="$VERSION" \
+      org.opencontainers.image.revision="$VCS_REF"
+LABEL org.opencontainers.image.source="https://github.com/egori4/cybercontroller-rdc-client" \
+      io.egori4.project="cybercontroller-rdc-client" \
+      io.egori4.security-profile="restricted"

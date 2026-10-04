@@ -1,8 +1,12 @@
-# RDC Client
+# CyberController RDC Client
 
-A hardened Remote Desktop Commander container with a small generic MCP Streamable HTTP client.
+The restricted Remote Desktop Commander access option for **CyberController MCP**, with a small MCP Streamable HTTP command-line client. It deliberately has no direct host-administration access.
 
-RDC Client is an **optional bridge/consumer**, not an MCP server and not the only way to access one. An MCP server may instead be used directly by n8n, another MCP client, another agent platform, or custom automation.
+For generic root-equivalent host administration, use the separate [rdc-host-admin](https://github.com/egori4/rdc-host-admin) project. Never add a privileged mode, host-root mount, or Docker socket to this image.
+
+The transport remains generic; the project name describes its supported deployment role, not a CyberController-specific protocol.
+
+CyberController RDC Client is an **optional bridge/consumer**, not an MCP server and not the only way to access one. An MCP server may instead be used directly by n8n, another MCP client, another agent platform, or custom automation.
 
 ## Architecture
 
@@ -13,7 +17,7 @@ ChatGPT
 Desktop Commander Remote
    |
    v
-RDC Client container
+CyberController RDC Client container
    |
    | mcpctl / MCP Streamable HTTP
    v
@@ -31,7 +35,7 @@ For first-time deployment and lifecycle operations:
 Default Docker image:
 
 ```text
-egori4/rdc-client:0.1.0
+egori4/cybercontroller-rdc-client:0.2.0
 ```
 
 ## Included commands
@@ -77,3 +81,7 @@ Never commit:
 - private keys
 - environment/customer credentials
 - Remote Desktop Commander device state
+
+## Renamed in 0.2.0
+
+Former repository: `egori4/rdc_client`. New image: `egori4/cybercontroller-rdc-client:0.2.0`. Existing container names, state/secrets volumes, environment variables, and internal paths intentionally remain unchanged. See [migration](docs/MIGRATION.md). The rename does not grant any new access.

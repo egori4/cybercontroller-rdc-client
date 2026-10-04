@@ -1,9 +1,9 @@
 {
-  "name": "rdc-client",
-  "version": "0.1.0",
+  "name": "cybercontroller-rdc-client",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "Hardened Remote Desktop Commander client with a generic MCP Streamable HTTP CLI",
+  "description": "Restricted Desktop Commander access option for CyberController MCP",
   "scripts": {
     "test": "node --test"
   },

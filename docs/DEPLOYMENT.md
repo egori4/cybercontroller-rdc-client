@@ -1,8 +1,8 @@
 # Deployment and Operations
 
-This is the authoritative operator guide for deploying RDC Client.
+This is the authoritative operator guide for deploying CyberController RDC Client.
 
-RDC Client is a **generic optional MCP consumer/bridge**. It is not the MCP server and it is not specific to CyberController. A compatible MCP server may also be accessed directly by n8n, another MCP client, another agent platform, or custom automation without RDC.
+CyberController RDC Client is the **restricted optional MCP consumer/bridge for CyberController MCP**. It is not the MCP server. Its MCP transport is generic, but this repository documents the CyberController deployment role. A compatible MCP server may also be accessed directly by n8n, another MCP client, another agent platform, or custom automation without RDC.
 
 ## Architecture
 
@@ -11,7 +11,7 @@ ChatGPT
    |
    | Desktop Commander Remote
    v
-RDC Client container
+CyberController RDC Client container
    |
    | MCP Streamable HTTP + TLS + bearer token
    v
@@ -24,7 +24,7 @@ For CyberController, the MCP server may be:
 egori4/cybercontroller-mcp
 ```
 
-but RDC Client does not contain CyberController log mappings or host mounts.
+but CyberController RDC Client does not contain CyberController log mappings or host mounts.
 
 ## 1. Prerequisites
 
@@ -40,7 +40,7 @@ The target host pulls a prebuilt image from Docker Hub.
 Default image:
 
 ```text
-egori4/rdc-client:0.1.0
+egori4/cybercontroller-rdc-client:0.2.0
 ```
 
 ## 2. What the MCP server operator provides
@@ -64,8 +64,8 @@ Never provide the MCP server TLS private key to the RDC client.
 ## 3. Obtain the client deployment files
 
 ```bash
-git clone https://github.com/egori4/rdc_client.git
-cd rdc_client
+git clone https://github.com/egori4/cybercontroller-rdc-client.git
+cd cybercontroller-rdc-client
 ```
 
 The repository supplies the installer. The application image is pulled from Docker Hub.
@@ -347,13 +347,13 @@ If the target MCP server supports only one bearer token, their separate secrets 
 Example:
 
 ```bash
-docker pull egori4/rdc-client:0.1.1
+docker pull egori4/cybercontroller-rdc-client:0.2.1
 ```
 
 Then rerun the installer with:
 
 ```bash
-RDC_CLIENT_IMAGE=egori4/rdc-client:0.1.1 ./install.sh
+RDC_CLIENT_IMAGE=egori4/cybercontroller-rdc-client:0.2.1 ./install.sh
 ```
 
 When prompted, recreate the existing container.
@@ -393,7 +393,7 @@ For permanent RDC revocation, also remove/revoke the device in the Desktop Comma
 
 ## 18. Security note
 
-RDC Client uses normal Docker bridge networking. It is not an outbound network sandbox.
+CyberController RDC Client uses normal Docker bridge networking. It is not an outbound network sandbox.
 
 Its security boundary relies on:
 
@@ -405,3 +405,9 @@ Its security boundary relies on:
 - server-side MCP authorization and guardrails
 
 The MCP server remains responsible for what tools/data the client is allowed to access.
+
+## Repository rename
+
+Version 0.2.0 keeps the legacy Docker object names (`rdc-client`, `rdc-client-state`, `rdc-client-secrets`) and internal paths intentionally so upgrades preserve pairing and tokens. The GitHub repository and Docker Hub image now use `cybercontroller-rdc-client`. Follow [MIGRATION.md](MIGRATION.md) rather than creating fresh credential volumes.
+
+Host administration is a different project: [rdc-host-admin](https://github.com/egori4/rdc-host-admin). It is not required by this client or by the MCP server.

@@ -1,55 +1,42 @@
 # Releasing
 
-Runtime images are published to Docker Hub:
+Default image: `egori4/cybercontroller-rdc-client:0.2.0`. Release images are public and `linux/amd64` only in this initial release. Source repositories never contain device state or credentials.
 
-```text
-egori4/rdc-client
-```
+## Checks before release
 
-The target server should pull a prebuilt release and should not build the image locally.
+Run the CI checks, review the security implications, and test the image on an authorized Linux lab host. Update `VERSION`, package metadata/lockfile, default image examples, and the changelog together. The upstream RDC version is pinned; upgrades are explicit reviewable changes, not automatic `latest` resolution.
 
-## GitHub Actions requirements
+For host-admin, `scripts/smoke-test.sh` performs real privileged operations restricted to uniquely named temporary resources. Do not run it on a production host without permission. Browser pairing/end-to-end remote authorization is a separate manual test.
 
-Configure these repository Actions secrets:
+## GitHub Actions
 
-```text
-DOCKERHUB_USERNAME
-DOCKERHUB_TOKEN
-```
+The CI workflow runs on pushes and pull requests without publishing images. Publication is a manual workflow to avoid unintentionally overwriting release tags.
 
-`DOCKERHUB_TOKEN` should be a Docker Hub access token with only the permissions required to publish this repository.
+Configure:
 
-## Release build behavior
+- repository variable `DOCKERHUB_USERNAME` (or the existing secret with that name)
+- repository secret `DOCKERHUB_TOKEN`, using a persistent Docker Hub personal/organization access token with appropriate push permission and expiry
 
-For each release, CI:
+A development-machine browser/device-login session is not a suitable long-lived CI credential. Never print tokens or copy Docker authentication files into a repository or image.
 
-1. checks out the exact Git commit;
-2. resolves the current `@wonderwhy-er/desktop-commander@latest` version once;
-3. builds the image using that exact resolved version;
-4. records it as an OCI image label;
-5. publishes version, minor and `latest` tags.
+Create the Docker Hub repository with the intended **public** visibility before publication. Create an annotated `v<VERSION>` Git tag and push it. Dispatch Publish Docker image **at that tag** with the matching version. The workflow validates semantic version syntax, `VERSION`, and tag-to-commit agreement before accepting the publishing credentials. Workflow actions are pinned by commit, and untrusted inputs enter the shell through environment variables rather than direct code interpolation.
 
-Example release:
+Images receive exact-version, minor, and `latest` tags. Use the exact tag/digest when installing. Do not overwrite an already released exact-version tag with different source.
 
-```text
-0.1.0
-0.1
-latest
-```
+## Maintainer first/manual publication
 
-Production deployments should use the exact version or digest rather than `latest`.
-
-## Manual first publication
-
-A maintainer who is already authenticated to Docker Hub can perform an initial/manual publication:
+A maintainer already authenticated to Docker Hub can publish without storing that interactive credential in GitHub:
 
 ```bash
-docker build --pull -t egori4/rdc-client:0.1.0 .
-docker tag egori4/rdc-client:0.1.0 egori4/rdc-client:0.1
-docker tag egori4/rdc-client:0.1.0 egori4/rdc-client:latest
-docker push egori4/rdc-client:0.1.0
-docker push egori4/rdc-client:0.1
-docker push egori4/rdc-client:latest
+version=$(cat VERSION)
+revision=$(git rev-parse HEAD)
+docker build --build-arg VERSION="$version" --build-arg VCS_REF="$revision" \
+  -t egori4/cybercontroller-rdc-client:"$version" .
+docker push egori4/cybercontroller-rdc-client:"$version"
+docker tag egori4/cybercontroller-rdc-client:"$version" egori4/cybercontroller-rdc-client:"${version%.*}"
+docker tag egori4/cybercontroller-rdc-client:"$version" egori4/cybercontroller-rdc-client:latest
+docker push egori4/cybercontroller-rdc-client:"${version%.*}"
+docker push egori4/cybercontroller-rdc-client:latest
 ```
 
-Do not publish images containing credentials or device-state volumes.
+Record the image digest in release notes and verify an anonymous pull if the image is intended to be public. Package source/installer assets with `git archive`, not a filesystem tar that could accidentally include credentials or ignored files. Keep OS and upstream dependency updates current; a passing smoke test is not a security audit.

@@ -2,7 +2,7 @@
 
 ## Responsibility
 
-RDC Client is a thin remote-access client.
+CyberController RDC Client is a thin remote-access client.
 
 It owns:
 
@@ -26,7 +26,7 @@ Those controls remain server-side.
 ```text
 ChatGPT
   -> Desktop Commander cloud
-  -> RDC Client container
+  -> CyberController RDC Client container
   -> mcpctl
   -> MCP Streamable HTTP over TLS
   -> MCP server
@@ -38,7 +38,7 @@ The target MCP server is configured entirely through deployment settings.
 
 The container is remotely controllable, so it is intentionally denied direct host access.
 
-A compromise of the RDC session should expose only:
+A compromise of the RDC session exposes at least:
 
 - the client container runtime
 - the configured MCP endpoint
@@ -46,3 +46,5 @@ A compromise of the RDC session should expose only:
 - responses that the MCP server authorizes
 
 The MCP server remains responsible for authorization and server-side tool/query guardrails.
+
+Normal Docker bridge networking is not an egress allowlist: the container can reach other destinations permitted by the host network. The boundary denies direct host filesystem/administration access, not arbitrary outbound traffic.

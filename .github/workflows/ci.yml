@@ -26,6 +26,30 @@ jobs:
           docker run --rm --network none --entrypoint node \
             --mount "type=bind,src=$GITHUB_WORKSPACE/test,dst=/opt/rdc-client/test,readonly" \
             restricted-rdc:ci --test /opt/rdc-client/test/config.test.mjs
+      - name: Verify mcpctl recovers MCP settings in sanitized shells
+        run: |
+          docker run -d --name mcpctl-env-test \
+            --env MCP_URL=http://127.0.0.1:9/mcp \
+            restricted-rdc:ci sh -c 'sleep 30'
+
+          set +e
+          output="$(docker exec mcpctl-env-test env -i \
+            HOME=/home/rdc \
+            PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+            /usr/local/bin/mcpctl health 2>&1)"
+          status=$?
+          set -e
+
+          docker rm -f mcpctl-env-test >/dev/null
+          printf '%s\n' "$output"
+
+          if printf '%s\n' "$output" | grep -q 'MCP_URL is required'; then
+            echo "mcpctl did not recover MCP_URL from the container environment" >&2
+            exit 1
+          fi
+
+          test "$status" -ne 0
+          printf '%s\n' "$output" | grep -q 'fetch failed'
       - name: Verify installed restricted boundary without pairing
         env:
           RDC_CLIENT_IMAGE: restricted-rdc:ci

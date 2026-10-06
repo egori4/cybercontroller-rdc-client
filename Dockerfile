@@ -28,9 +28,9 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 COPY src ./src
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY src/mcpctl-launcher.sh /usr/local/bin/mcpctl
 
-RUN printf '%s\n' '#!/bin/sh' 'exec node /opt/rdc-client/src/mcpctl.mjs "$@"' > /usr/local/bin/mcpctl \
- && chmod 0755 /usr/local/bin/mcpctl /usr/local/bin/docker-entrypoint.sh \
+RUN chmod 0755 /usr/local/bin/mcpctl /usr/local/bin/docker-entrypoint.sh \
  && useradd --uid 10001 --user-group --create-home --home-dir /home/rdc --shell /bin/sh rdc \
  && mkdir -p /home/rdc/.desktop-commander-device /home/rdc/.claude-server-commander /home/rdc/.npm /run/rdc-client \
  && chown -R 10001:10001 /home/rdc /run/rdc-client

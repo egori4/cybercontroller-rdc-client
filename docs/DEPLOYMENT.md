@@ -63,10 +63,22 @@ Never provide the MCP server TLS private key to the RDC client.
 
 ## 3. Obtain the client deployment files
 
+Keep CyberController add-on scripts under `/opt/radware/storage/scripts`. On a system where this is the first locally installed tool, the `scripts` directory may not exist yet, so create it first:
+
 ```bash
+mkdir -p /opt/radware/storage/scripts
+cd /opt/radware/storage/scripts
 git clone https://github.com/egori4/cybercontroller-rdc-client.git
 cd cybercontroller-rdc-client
 ```
+
+The expected repository path on CyberController is therefore:
+
+```text
+/opt/radware/storage/scripts/cybercontroller-rdc-client
+```
+
+All relative commands in this guide such as `./install.sh` and `./scripts/...` assume you are running them from that repository root unless the command explicitly says otherwise.
 
 The repository supplies the installer. The application image is pulled from Docker Hub.
 

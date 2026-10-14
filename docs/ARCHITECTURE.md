@@ -10,6 +10,7 @@ It owns:
 - MCP client transport
 - local container hardening
 - RDC device/session persistence
+- optional startup-only runtime downloads inside the same writable state volume
 
 It does **not** own:
 

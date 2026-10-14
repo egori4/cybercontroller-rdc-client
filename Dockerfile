@@ -15,7 +15,7 @@ RUN apt-get update \
  && npm cache clean --force \
  && rm -rf /var/lib/apt/lists/*
 
-# Desktop Commander 0.2.52 preemptively downloads Chrome for its PDF writer.
+# Bundled Desktop Commander 0.2.52 preemptively downloads Chrome for its PDF writer.
 # This hardened client intentionally does not provide PDF-generation capability.
 # A harmless placeholder satisfies its "system Chrome exists" startup check and
 # prevents a large runtime browser download into ephemeral storage.
@@ -29,8 +29,9 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY src ./src
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY src/mcpctl-launcher.sh /usr/local/bin/mcpctl
+COPY src/rdc-runtime.sh /usr/local/bin/rdc-runtime.sh
 
-RUN chmod 0755 /usr/local/bin/mcpctl /usr/local/bin/docker-entrypoint.sh \
+RUN chmod 0755 /usr/local/bin/mcpctl /usr/local/bin/docker-entrypoint.sh /usr/local/bin/rdc-runtime.sh \
  && useradd --uid 10001 --user-group --create-home --home-dir /home/rdc --shell /bin/sh rdc \
  && mkdir -p /home/rdc/.desktop-commander-device /home/rdc/.claude-server-commander /home/rdc/.npm /run/rdc-client \
  && chown -R 10001:10001 /home/rdc /run/rdc-client
@@ -39,9 +40,9 @@ USER 10001:10001
 WORKDIR /home/rdc
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["desktop-commander", "remote"]
+CMD ["/usr/local/bin/rdc-runtime.sh", "remote"]
 
-ARG VERSION=0.2.0
+ARG VERSION=0.3.0
 ARG VCS_REF=unknown
 LABEL org.opencontainers.image.version="$VERSION" \
       org.opencontainers.image.revision="$VCS_REF"

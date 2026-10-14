@@ -35,8 +35,25 @@ For first-time deployment and lifecycle operations:
 Default Docker image:
 
 ```text
-egori4/cybercontroller-rdc-client:0.2.0
+egori4/cybercontroller-rdc-client:0.3.0
 ```
+
+## RDC updates (v0.3.0)
+
+Version 0.3.0 supports **opt-in Desktop Commander npm updates when the container starts** without rebuilding the Docker image. The image retains upstream RDC **0.2.52** as its pinned, offline fallback. Use `RDC_AUTO_UPDATE=true` when installing or upgrading to check npm's stable release, validate the new executable, and persist working versions under the existing `rdc-client-state` volume. Disabled by default; no continuous updates or unexpected restarts.
+
+For an existing v0.2.0 client, use **independent SSH/host access**:
+
+```bash
+cd /opt/radware/storage/scripts/cybercontroller-rdc-client
+git pull --ff-only origin main
+docker pull egori4/cybercontroller-rdc-client:0.3.0
+RDC_AUTO_UPDATE=true ./update.sh egori4/cybercontroller-rdc-client:0.3.0
+./scripts/verify-container.sh rdc-client
+docker logs --tail 40 rdc-client
+```
+
+The new `update.sh` preserves the existing paired identity, MCP URL, token and CA volumes, and retains a stopped rollback container. Use the **actual checkout directory** if yours differs. After upgrading, verify `mcpctl health` and a real RDC session. See [Deployment and operations](docs/DEPLOYMENT.md#9a-update-the-rdc-client), [Security](docs/SECURITY.md), and [v0.3.0 validation](docs/VALIDATION.md) for backups, runtime-version checks, rollback, test evidence and security caveats. The restricted image still has no Docker socket, privileged mode, or host mount.
 
 ## Included commands
 
@@ -84,4 +101,4 @@ Never commit:
 
 ## Renamed in 0.2.0
 
-Former repository: `egori4/rdc_client`. New image: `egori4/cybercontroller-rdc-client:0.2.0`. Existing container names, state/secrets volumes, environment variables, and internal paths intentionally remain unchanged. See [migration](docs/MIGRATION.md). The rename does not grant any new access.
+Former repository: `egori4/rdc_client`. Image renamed in that release to `egori4/cybercontroller-rdc-client:0.2.0`; current image is `egori4/cybercontroller-rdc-client:0.3.0`. Existing container names, state/secrets volumes, environment variables, and internal paths intentionally remain unchanged. See [migration](docs/MIGRATION.md). The rename does not grant any new access.

@@ -40,7 +40,7 @@ The target host pulls a prebuilt image from Docker Hub.
 Default image:
 
 ```text
-egori4/cybercontroller-rdc-client:0.2.0
+egori4/cybercontroller-rdc-client:0.3.0
 ```
 
 ## 2. What the MCP server operator provides
@@ -134,7 +134,7 @@ Mounted at:
 /home/rdc/.desktop-commander-device
 ```
 
-Contains the Desktop Commander device/session identity.
+Contains the Desktop Commander device/session identity and, when `RDC_AUTO_UPDATE=true`, versioned downloaded runtimes under `runtime/`.
 
 This is sensitive and unique to the paired RDC device.
 
@@ -232,6 +232,88 @@ docker stop rdc-client
 ```
 
 Stopping the RDC client does not stop the MCP server. Other MCP consumers may continue operating.
+
+## 9A. Update the RDC client
+
+### One-time image upgrade from 0.2.0 to 0.3.0
+
+Version 0.3.0 introduces opt-in, **startup-only** upstream Desktop Commander updates. Existing containers stay unchanged until an operator upgrades the Docker image. **Run from independent SSH/host access**, not through the RDC session that is about to be replaced. Use the actual existing Git checkout location (often `/opt/radware/storage/scripts/cybercontroller-rdc-client` in CyberController installations).
+
+1. Before the first upgrade, **back up the paired state and secret volumes** securely, while RDC is stopped. The state holds the Remote device credential; secrets hold the MCP bearer token. Example for default volume names:
+
+```bash
+docker stop rdc-client
+umask 077
+mkdir -p "$HOME/rdc-client-backup"
+docker run --rm --network none --user 0:0 \
+  --mount type=volume,src=rdc-client-state,dst=/state,readonly \
+  --entrypoint tar egori4/cybercontroller-rdc-client:0.2.0 \
+  -C /state -czf - . > "$HOME/rdc-client-backup/state.tar.gz"
+docker run --rm --network none --user 0:0 \
+  --mount type=volume,src=rdc-client-secrets,dst=/secrets,readonly \
+  --entrypoint tar egori4/cybercontroller-rdc-client:0.2.0 \
+  -C /secrets -czf - . > "$HOME/rdc-client-backup/secrets.tar.gz"
+```
+
+Keep these credential-bearing archives private and off the host in an approved secure backup location. Adjust the volume names for customized deployments. Stopping the container for backup means `update.sh` will preserve its stopped state; start it explicitly afterward.
+
+2. Upgrade using the new scripts and enable automatic RDC runtime updates:
+
+```bash
+cd /opt/radware/storage/scripts/cybercontroller-rdc-client
+git pull --ff-only origin main
+docker pull egori4/cybercontroller-rdc-client:0.3.0
+RDC_AUTO_UPDATE=true ./update.sh egori4/cybercontroller-rdc-client:0.3.0
+docker start rdc-client           # if previously stopped for backup
+```
+
+`update.sh` checks that the old and new images are labeled as restricted CyberController RDC clients **before stopping the existing container**. It retains the previous container under a timestamped `rdc-client-rollback-...` name. The replacement reuses the existing device name, MCP URL, `rdc-client-state` pairing volume, read-only `rdc-client-secrets` token/CA volume, and the old running/stopped state. An initial installation of a new image is not an upstream npm update.
+
+For later image upgrades, `RDC_AUTO_UPDATE` is preserved automatically unless explicitly overridden. An old 0.2.0 container lacking the option defaults to `false`. Do not run `./install.sh` to replace a working instance; use `./update.sh` to retain a rollback container. The image-update script recreates the **documented standard restricted configuration** and does not reproduce undocumented manual Docker overrides, environment additions or custom mounts.
+
+### How automatic upstream RDC updates work
+
+- **Off by default.** Enable on a new `install.sh` with `RDC_AUTO_UPDATE=true`, or on an existing client through `update.sh` as above.
+- On every **container start/restart**, check npm's stable `latest` dist-tag (up to 12 seconds). Only versions matching numeric `MAJOR.MINOR.PATCH` are accepted, and only if newer than the current cached/bundled version.
+- Download new packages as **UID 10001** into a temporary directory under `rdc-client-state/runtime/versions` (up to 300 seconds), using npm cache there rather than the 8 MiB writable npm tmpfs. Run `desktop-commander remote --help` as a small validation check (up to 20 seconds), then atomically select the version. npm download cache is discarded afterward to limit growth.
+- With npm offline or a failed install/validation, use the **last validated cached runtime** or image-bundled **0.2.52**. It does not download or restart while RDC is already running. Switching runtime version does not change the Docker image version/tag.
+- Versioned downloaded runtimes consume persistent disk space: the tested 0.3.0 install occupied approximately **255 MiB**. Older cached versions remain for fallback and can accumulate; monitor disk use and remove unnecessary older versions only during maintenance with the container stopped. The 512 MiB container RAM limit is not a volume disk quota.
+- There is **no post-start remote-connection health check or automatic rollback from failures after the new RDC process launches**. An incompatible upstream release can require an image refresh (Node.js/system libraries). Take backup before the first upgrade.
+- The updater does not add privileges, mounts, a network, or another volume; the runtime cache is stored inside the existing sensitive pairing volume. The restricted client still can read its mounted MCP bearer token. Review [Security](SECURITY.md) before enabling automatic npm code execution.
+
+### Verification
+
+```bash
+./scripts/verify-container.sh rdc-client
+docker inspect rdc-client --format '{{.Config.Image}}'
+docker inspect rdc-client --format '{{range .Config.Env}}{{println .}}{{end}}' | grep '^RDC_AUTO_UPDATE='
+docker logs --tail 50 rdc-client
+docker exec rdc-client mcpctl health
+docker exec rdc-client mcpctl tools
+```
+
+Expected logs show `RDC runtime: activated 0.3.0` on initial download or `RDC runtime: starting 0.3.0` when using the cache (actual version may be newer). Confirm the device appears online in the Desktop Commander dashboard and perform a real bounded tool call. A passing npm CLI `--help` check alone does not prove that remote pairing/MCP connectivity works.
+
+Subsequent stable RDC releases need **only an explicit `docker restart rdc-client`**, not a rebuilt image, provided the upstream runtime stays compatible. The default Docker restart policy remains `no`.
+
+### Disable automatic updates or manually roll back
+
+To disable upstream updates and force the bundled 0.2.52 runtime, run from independent host access:
+
+```bash
+RDC_AUTO_UPDATE=false ./update.sh egori4/cybercontroller-rdc-client:0.3.0
+```
+
+If the running client is broken and the old container is still available, restore the timestamped old container (substitute its actual name):
+
+```bash
+docker stop rdc-client
+docker rm rdc-client
+docker rename rdc-client-rollback-YYYYMMDDTHHMMSSZ rdc-client
+docker start rdc-client
+```
+
+Never start both with the same paired state volume. Stop the restored instance instead of starting it if the previous deployment was intentionally offline. Older versions may not understand changes written to shared device state by a newer upstream runtime; retain the pre-upgrade state backup. Once verified, remove unnecessary **stopped** rollback containers using `docker rm <backup-container-name>` without deleting the volumes.
 
 ## 10. Credential model
 

@@ -1,12 +1,12 @@
 # Releasing
 
-Default image: `egori4/cybercontroller-rdc-client:0.2.0`. Release images are public and `linux/amd64` only in this initial release. Source repositories never contain device state or credentials.
+Default image: `egori4/cybercontroller-rdc-client:0.3.0`. Release images are public and `linux/amd64` only in this release. Source repositories never contain device state or credentials.
 
 ## Checks before release
 
-Run the CI checks, review the security implications, and test the image on an authorized Linux lab host. Update `VERSION`, package metadata/lockfile, default image examples, and the changelog together. The upstream RDC version is pinned; upgrades are explicit reviewable changes, not automatic `latest` resolution.
+Run the CI checks, review the security implications, and test the image on an authorized Linux lab host. Update `VERSION`, package metadata/lockfile, default image examples, and the changelog together. The image's bundled RDC version remains pinned at **0.2.52**. With explicit `RDC_AUTO_UPDATE=true` the restricted client independently checks npm's stable latest release **on start**, installs it as UID 10001 into the paired state volume and validates the CLI. This is not a new image release; document image and runtime versions separately. Upstream dependency changes can require a new base image.
 
-For host-admin, `scripts/smoke-test.sh` performs real privileged operations restricted to uniquely named temporary resources. Do not run it on a production host without permission. Browser pairing/end-to-end remote authorization is a separate manual test.
+This is the **restricted** client, not host-admin: validate the non-root/read-only Docker boundary, unit tests, upstream updater download/cache/disabled paths, and safe image migration with disposable volumes. Never use privileged host administration tests for this repo. Real account pairing and MCP authenticated connectivity are separate manual acceptance tests.
 
 ## GitHub Actions
 

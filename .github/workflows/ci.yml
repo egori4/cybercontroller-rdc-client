@@ -36,8 +36,10 @@ jobs:
             restricted-rdc:ci remote --help
       - name: Verify mcpctl recovers MCP settings in sanitized shells
         run: |
+          # A readable empty token file tests URL recovery without a real secret.
           docker run -d --name mcpctl-env-test \
             --env MCP_URL=http://127.0.0.1:9/mcp \
+            --env MCP_BEARER_TOKEN_FILE=/dev/null \
             restricted-rdc:ci sh -c 'sleep 30'
 
           set +e

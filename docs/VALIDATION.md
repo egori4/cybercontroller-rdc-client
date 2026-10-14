@@ -7,7 +7,7 @@ Date: 2026-10-14. Test machine: **m920q only**. No existing customer/CyberContro
 | Test | Result |
 | --- | --- |
 | 7 mocked npm/startup updater tests (new install, cache reuse, offline, broken download, bad validation, prerelease rejection, disabled mode) | PASS |
-| 3 MCP connection configuration tests | PASS |
+| 3 MCP connection configuration tests | PASS |\n| Sanitized-shell mcpctl test with synthetic empty token file, no real credential | PASS on m920q |
 | Docker image build (Node 22.23.3, bundled upstream RDC 0.2.52) | PASS |
 | Bundled RDC remote help under non-root, read-only rootfs, capabilities dropped, no networking | PASS |
 

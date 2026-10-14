@@ -20,16 +20,26 @@ jobs:
       - name: Shell syntax
         run: |
           find . -path './node_modules' -prune -o -name '*.sh' -print0 | xargs -0 -r -n1 bash -n
+      - name: Startup updater tests (unprivileged, mocked npm)
+        run: python3 -m unittest discover -s tests -v
       - name: Unit tests
         run: |
           docker build -t restricted-rdc:ci .
           docker run --rm --network none --entrypoint node \
             --mount "type=bind,src=$GITHUB_WORKSPACE/test,dst=/opt/rdc-client/test,readonly" \
             restricted-rdc:ci --test /opt/rdc-client/test/config.test.mjs
+      - name: Verify disabled updater uses bundled RDC as non-root on a read-only filesystem
+        run: |
+          docker run --rm --network none --read-only --user 10001:10001 \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --env RDC_AUTO_UPDATE=false --entrypoint /usr/local/bin/rdc-runtime.sh \
+            restricted-rdc:ci remote --help
       - name: Verify mcpctl recovers MCP settings in sanitized shells
         run: |
+          # A readable empty token file tests URL recovery without a real secret.
           docker run -d --name mcpctl-env-test \
             --env MCP_URL=http://127.0.0.1:9/mcp \
+            --env MCP_BEARER_TOKEN_FILE=/dev/null \
             restricted-rdc:ci sh -c 'sleep 30'
 
           set +e

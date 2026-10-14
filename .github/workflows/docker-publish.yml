@@ -6,7 +6,7 @@ on:
       version:
         description: Exact tagged release matching VERSION (public image)
         required: true
-        default: "0.2.0"
+        default: "0.3.0"
 
 permissions:
   contents: read
@@ -42,6 +42,8 @@ jobs:
           }
           echo "version=$REQUESTED_VERSION" >> "$GITHUB_OUTPUT"
           echo "minor=${REQUESTED_VERSION%.*}" >> "$GITHUB_OUTPUT"
+      - name: Startup updater tests (unprivileged, mocked npm)
+        run: python3 -m unittest discover -s tests -v
       - name: Unit tests
         run: |
           docker build -t restricted-rdc:ci .

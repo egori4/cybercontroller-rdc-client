@@ -67,6 +67,9 @@ else
   echo "PASS: no host root mount"
 fi
 
+echo "--- RDC runtime startup update preference ---"
+docker inspect "$name" --format '{{range .Config.Env}}{{println .}}{{end}}' |
+  grep '^RDC_AUTO_UPDATE=' || echo 'RDC_AUTO_UPDATE=false (legacy image)'
 echo "--- configured limits ---"
 docker inspect "$name" | jq '.[0].HostConfig | {
   Memory,

@@ -2,6 +2,8 @@
 
 The GitHub repository is now `egori4/cybercontroller-rdc-client` (formerly `egori4/rdc_client`). The Docker Hub image is now `egori4/cybercontroller-rdc-client:0.2.0` (formerly `egori4/rdc-client`). Git history is retained. Docker Hub image names do not follow GitHub redirects.
 
+For upgrades from 0.2.0 to **0.3.0** (opt-in runtime updater), do **not** repeat the historical installer recreation procedure below. Use [the new safe update.sh process](DEPLOYMENT.md#9a-update-the-rdc-client), which preserves pairing and MCP credentials, and retains a stopped rollback container.
+
 ## Existing working copy
 
 ```bash

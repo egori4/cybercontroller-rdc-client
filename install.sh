@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE="${RDC_CLIENT_IMAGE:-egori4/cybercontroller-rdc-client:0.2.0}"
+IMAGE="${RDC_CLIENT_IMAGE:-egori4/cybercontroller-rdc-client:0.3.0}"
 CONTAINER_NAME="${CONTAINER_NAME:-rdc-client}"
 STATE_VOLUME="${STATE_VOLUME:-rdc-client-state}"
 SECRETS_VOLUME="${SECRETS_VOLUME:-rdc-client-secrets}"
@@ -9,6 +9,7 @@ RDC_DEVICE_NAME="${RDC_DEVICE_NAME:-}"
 MCP_URL="${MCP_URL:-}"
 MCP_CA_SOURCE="${MCP_CA_SOURCE:-}"
 START_NOW="${START_NOW:-}"
+RDC_AUTO_UPDATE="${RDC_AUTO_UPDATE:-false}"
 
 die() {
   echo "ERROR: $*" >&2
@@ -17,6 +18,7 @@ die() {
 
 command -v docker >/dev/null 2>&1 || die "docker is required"
 docker info >/dev/null 2>&1 || die "cannot access Docker"
+[[ "$RDC_AUTO_UPDATE" == true || "$RDC_AUTO_UPDATE" == false ]] || die "RDC_AUTO_UPDATE must be true or false"
 
 if [[ -z "$RDC_DEVICE_NAME" ]]; then
   default_name="rdc-$(hostname -s 2>/dev/null || hostname)"
@@ -126,6 +128,7 @@ docker create \
   --mount "type=volume,src=$STATE_VOLUME,dst=/home/rdc/.desktop-commander-device" \
   --mount "type=volume,src=$SECRETS_VOLUME,dst=/run/rdc-client,readonly" \
   --env "MCP_URL=$MCP_URL" \
+  --env "RDC_AUTO_UPDATE=$RDC_AUTO_UPDATE" \
   "${ca_env_args[@]}" \
   "$IMAGE" >/dev/null
 
@@ -137,6 +140,7 @@ fi
 echo "Created hardened container: $CONTAINER_NAME"
 echo "RDC device name: $RDC_DEVICE_NAME"
 echo "MCP endpoint: $MCP_URL"
+echo "RDC auto-update on start: $RDC_AUTO_UPDATE"
 echo
 echo "Verify boundary:"
 echo "  scripts/verify-container.sh $CONTAINER_NAME"

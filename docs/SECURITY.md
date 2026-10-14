@@ -33,9 +33,15 @@ Do not use:
 
 ## Writable storage
 
-Persistent writable storage should be limited to the Desktop Commander device state directory.
+Persistent writable storage is limited to the Desktop Commander device state directory (`rdc-client-state`). With optional runtime updates, `runtime/versions` beneath **that same state volume** holds downloaded executable JavaScript and npm dependencies; the adjacent npm download cache is removed after each startup. **No host mount, Docker socket, root privileges, extra volume or additional writable system path is introduced.** Treat the whole volume as sensitive and back it up before upgrading. Versioned installs may consume hundreds of MiB each; monitor disk capacity and manage old cached versions.
 
-Other Desktop Commander runtime/cache locations should use bounded tmpfs mounts.
+Other Desktop Commander runtime/cache locations use bounded tmpfs mounts. The separate persistent runtime cache is intentionally not subject to the 8 MiB npm tmpfs limit.
+
+## Automatic upstream updates
+
+`RDC_AUTO_UPDATE=true` opts in to running newly published, otherwise unreviewed upstream npm packages. Installs run as restricted UID 10001, but remotely controlled code can still read the RDC pairing and available MCP bearer token, so this is a supply-chain and credential-exposure decision. npm integrity checking and CLI `remote --help` validation do not guarantee security or real cloud connectivity.
+
+The default is **false**. Only stable `latest` versions matching numeric semver are selected. Network failures and failed validation use the last selected cached version (or image-bundled 0.2.52), not an arbitrary partially installed package. The updater runs only at startup and **does not test/revert after a runtime is successfully launched**. Package compatibility may require an image rebuild for newer Node.js/system dependencies; do not depend on permanent compatibility.
 
 ## MCP credential
 
